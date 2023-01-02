@@ -79,7 +79,7 @@ def culc_internal_metrics(data, pred):
     metrics['calinski harabasz score'] = calinski_harabasz_score(data, pred)
     metrics['davies bouldin index'] = davies_bouldin_score(data, pred)
     # O(n^2)
-    metrics['dunn_validity_index'] = dunn_validity_index_score(data, pred)
+    metrics['dunn validity index'] = dunn_validity_index_score(data, pred)
 
     return metrics
 
