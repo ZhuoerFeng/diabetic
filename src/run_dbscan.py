@@ -1,8 +1,10 @@
 import pandas as pd
 from sklearn import preprocessing
 # from model import KMeans
-from sklearn.cluster import KMeans
+from sklearn.cluster import DBSCAN
 from utils import visualize
+import numpy as np
+import time
 
 def main():
     data = pd.read_csv('data/diabetic_data_lht.csv')
@@ -18,9 +20,13 @@ def main():
     # new_data.apply(lambda s: pd.to_numeric(s, errors='raise').notnull().all())    
 
     print(new_data.mean())
-    n_clusters = 12
-    kmeans = KMeans(n_clusters=n_clusters, random_state=0, n_init=10, verbose=1).fit(new_data.to_numpy()) # 558000
-    visualize(new_data.to_numpy(), kmeans.labels_, n_clusters, filename="x_embed_10.npy")
+    start = time.time()
+    clustering = DBSCAN(eps=0.15, min_samples=5, algorithm="kd_tree", n_jobs=6).fit(new_data.to_numpy()) # 558000
+    end = time.time()
+    print(end - start)
+    n_clusters = np.max(clustering.labels_)
+    print(n_clusters)
+    visualize(new_data.to_numpy(), clustering.labels_, n_clusters, recalc=True)
     # k_means = KMeans(num_clusters=5, data=new_data.to_numpy()) # 199000
     # k_means.loop()
 

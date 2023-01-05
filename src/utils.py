@@ -1,9 +1,16 @@
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
+import numpy as np
+import os
 
-def visualize(X, X_pred, num_clusters):
-    X_embedded = TSNE(n_components=2, learning_rate=20,
-                    init='random', perplexity=3, verbose=1).fit_transform(X)
+def visualize(X, X_pred, num_clusters, filename='x_embedded.npy', recalc=False):
+    if os.path.exists(filename) and not recalc:
+        X_embedded = np.load(filename)
+    else:
+        X_embedded = TSNE(n_components=2, init='pca', random_state=42, verbose=1).fit_transform(X)
+        print(X_embedded.shape)
+        print('finished tnse')
+        np.save(filename, X_embedded)
     color_list = [
         "#fff7bc",
         "#fec44f",
@@ -18,9 +25,12 @@ def visualize(X, X_pred, num_clusters):
         "#7fcdbb",
         "#2c7fb8",
     ]
-    for i in num_clusters:
+    for i in range(num_clusters):
         plt.scatter(
-            X_embedded[X_pred == i, :],
-            c=color_list[i]
+            X_embedded[X_pred == i, 0],
+            X_embedded[X_pred == i, 1],
+            c=color_list[i],
+            label=f"$cluster {i}$"
         )
+    plt.legend()
     plt.show()
