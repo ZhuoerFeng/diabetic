@@ -10,14 +10,14 @@ DBSCANOutput = namedtuple(
     'DBSCANOutput', [
         'labels_',
         'cluster_centers_',
-        'inertia'
+        'clusters'
     ]
 )
 
 NOISE = -1
 UNLABELED = 0
 
-class DBSCAN:
+class FastDBSCAN:
     def __init__(self, eps=0.1, min_samples=5, metric='euclidean', metric_params=None, algorithm='auto', leaf_size=10, p=None, n_jobs=None):
         self.eps = eps
         self.min_samples=min_samples
@@ -28,6 +28,7 @@ class DBSCAN:
         self.core_obj = list()
         self.data = None
         self.data_tag = list() # -1 represents noise
+        self.clusters = dict()
         
     def setup_kdtree(self):
         print("Setting up KDTree...")
@@ -37,8 +38,6 @@ class DBSCAN:
         self.kdtree = spatial.KDTree(self.data, leafsize=self.leaf_size)
         print("KDTree set")
         
-    def init_fit(self):
-        self.core_obj = list()
             
     def get_neighbor(self, point_idx):
         neighbor = list()
@@ -51,43 +50,50 @@ class DBSCAN:
     
     def get_neighbor_from_kdtree(self, point_idx):
         q = self.data[point_idx]
-        return self.kdtree.query_ball_point(q, r=self.eps)
+        return self.kdtree.query_ball_point(q, r=self.eps, workers=6)
     
     def fit(self, data):
         self.data = data
         self.setup_kdtree()
+        core_obj = dict()
         self.data_tag = np.zeros(len(data), dtype=np.int)
+        # save looking up time
+        for i in range(len(self.data)):
+            nei = self.get_neighbor_from_kdtree(i)
+            if len(nei) >= self.min_samples:
+                core_obj[i] = nei
+        old_core_obj = core_obj.copy()
         
         class_num:int = 0
-        for i in tqdm(range(len(data))):
-            if self.data_tag[i] != 0:
-                continue
-            # neighbor = self.get_neighbor(i)
-            neighbor = self.get_neighbor_from_kdtree(i)
-            if len(neighbor) < self.min_samples:
-                self.data_tag[i] = NOISE
-                continue
-            class_num = class_num + 1
-            self.data_tag[i] = class_num
+        unvisited = list(range(len(self.data)))
+        while len(core_obj) > 0:
+            print(f"Core obj len{len(core_obj)}")
+            old_unvisited = list()
+            old_unvisited.extend(unvisited)
             
-            waiting_list = neighbor
-            while len(waiting_list) > 0:
-                check_id = waiting_list.pop()
-                if self.data_tag[check_id] == NOISE:
-                    self.data_tag[check_id] = class_num
-                if self.data_tag[check_id] != 0:
-                    continue
-                self.data_tag[check_id] = class_num
-                # new_neighbor = self.get_neighbor(check_id)
-                new_neighbor = self.get_neighbor_from_kdtree(check_id)
-                if len(new_neighbor) >= self.min_samples: # 伸びる
-                    for n in new_neighbor:
-                        if n not in waiting_list:
-                            waiting_list.append(n)
+            
+            cur_idx = np.random.choice(list(core_obj.keys()))
+            queue = [cur_idx]
+            unvisited.remove(cur_idx)
+            
+            while len(queue) > 0:
+                print(f"Queue len{len(queue)}")
+                head = queue.pop()
+                # head_nei = self.get_neighbor_from_kdtree(head)
+                if head in old_core_obj.keys():
+                    delta = [h_nei for h_nei in old_core_obj[head] if h_nei in unvisited]
+                    queue.extend(delta)
+                    unvisited = list((set(unvisited) - set(delta) ))
+            class_num += 1
+            self.clusters[class_num] = list(set(old_unvisited) - set(unvisited))
+            for c in self.clusters[class_num]:
+                self.data_tag[c] = class_num
+                if c in core_obj.keys():
+                    del core_obj[c]
 
         self.class_num = class_num
         return DBSCANOutput(
             labels_=self.data_tag,
             cluster_centers_=None,
-            inertia=None
+            clusters=self.clusters
         ) 
