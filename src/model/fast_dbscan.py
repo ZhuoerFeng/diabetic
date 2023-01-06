@@ -81,7 +81,7 @@ class FastDBSCAN:
                 head = queue.pop()
                 # head_nei = self.get_neighbor_from_kdtree(head)
                 if head in old_core_obj.keys():
-                    delta = [h_nei for h_nei in old_core_obj[head] if h_nei in unvisited]
+                    delta = list(set(old_core_obj[head]).intersection(set(unvisited)))
                     queue.extend(delta)
                     unvisited = list((set(unvisited) - set(delta) ))
             class_num += 1
