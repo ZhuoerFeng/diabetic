@@ -1,7 +1,6 @@
 import pandas as pd
 from sklearn import preprocessing
-# from model import KMeans
-from sklearn.cluster import KMeans
+from model import KMeans
 from utils import visualize, write_results_to_local_csv, radar
 
 def main():
@@ -21,16 +20,16 @@ def main():
 
     print(new_data.mean())
     n_clusters = 12
-    kmeans = KMeans(n_clusters=n_clusters, random_state=0, n_init=10, verbose=1).fit(new_data.to_numpy()) # 558000
-    visualize(new_data.to_numpy(), kmeans.labels_, n_clusters, filename="x_embed_10.npy")
+    kmeans = KMeans(n_clusters=n_clusters, random_state=0, n_init=5).fit(new_data.to_numpy()) # 558000
+    # visualize(new_data.to_numpy(), kmeans.labels_, n_clusters, filename="x_embed_10.npy")
     
     write_results_to_local_csv(
         column_name_list=column_names,
         data=useful_data,
         cluster_result=kmeans.labels_,
-        filename="kmeans_results_c12.csv",
+        filename="my_kmeans_results_c12.csv",
         overwrite=True,
-        append=True
+        append=False
     )
     
     radar(kmeans.cluster_centers_, column_names)
