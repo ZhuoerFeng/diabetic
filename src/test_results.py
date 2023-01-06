@@ -23,8 +23,8 @@ def main(args):
     print(f"calinski_harabasz_score: {calinski_harabasz_score(normalized_data, pred)}")
     print(f"davies_bouldin_score: {davies_bouldin_score(normalized_data, pred)}")
     
-    print("Analysing cluster tendency...")
-    print(f"hopkins_statistics: {hopkins_statistics(normalized_data)}")
+    # print("Analysing cluster tendency...")
+    # print(f"hopkins_statistics: {hopkins_statistics(normalized_data)}")
     
     
 if __name__ == '__main__':

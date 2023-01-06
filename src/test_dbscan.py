@@ -1,16 +1,16 @@
 from sklearn import datasets
 import numpy as np
-from model import DBSCAN
+from model import DBSCAN, FastDBSCAN
 import matplotlib.pyplot as plt
 
 def main():
-    X,Y1 = datasets.make_circles(n_samples = 1500, factor = .4, noise = .07)
+    X,Y1 = datasets.make_circles(n_samples = 75000, factor = .4, noise = .07)
     print(X.shape)
     print(Y1.shape)
-    model = DBSCAN()
-    tag, class_num = model.fit(X)
+    model = FastDBSCAN(eps=0.10,  min_samples=100)
+    tag, _, _ = model.fit(X)
 
-    print(class_num)
+    print(np.max(tag))
     plt.scatter(
         X[tag==1, 0],
         X[tag==1, 1],
